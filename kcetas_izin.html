@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KCETAŞ — İzin Talep Sistemi</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#185FA5;--blue-dark:#0C447C;--blue-light:#E6F1FB;--red:#E24B4A;--red-light:#FCEBEB;--green:#3B6D11;--green-light:#EAF3DE;--amber:#BA7517;--amber-light:#FAEEDA;--gray:#f5f6f8;--border:#e2e5ea;--text:#1a1d23;--text2:#6b7280;--text3:#9ca3af;--white:#fff;--r:10px;--rs:6px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--gray);color:var(--text);min-height:100vh}
+.header{background:var(--blue);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px}
+.logo{color:#fff;font-size:15px;font-weight:600}
+.logo span{opacity:.65;font-weight:400;font-size:13px;margin-left:8px}
+.nav{display:flex;gap:6px}
+.nbtn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:var(--rs);font-size:13px;cursor:pointer}
+.nbtn:hover{background:rgba(255,255,255,.25)}
+.nbtn.active{background:rgba(255,255,255,.3);font-weight:500}
+.main{max-width:920px;margin:2rem auto;padding:0 1rem}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem}
+.ctitle{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1rem}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg.full{grid-column:1/-1}
+.fl{display:flex;flex-direction:column;gap:6px}
+label{font-size:12px;font-weight:500;color:var(--text2)}
+input[type=text],input[type=date],select,textarea{font-size:14px;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.1)}
+textarea{resize:none;height:70px}
+.date-row{display:flex;align-items:center;gap:10px}
+.daypill{background:var(--blue-light);color:var(--blue-dark);font-size:13px;font-weight:600;padding:9px 16px;border-radius:var(--rs);flex-shrink:0;min-width:76px;text-align:center}
+.alert{border-radius:var(--rs);padding:11px 15px;font-size:13px;display:none;margin-bottom:1rem;line-height:1.5}
+.alert-warn{background:var(--amber-light);color:#7a4f0a;border:1px solid #f5c96f}
+.alert-ok{background:var(--green-light);color:var(--green);border:1px solid #b5d97a}
+.alert-err{background:var(--red-light);color:#8b1a1a;border:1px solid #f5a5a5}
+.btnp{background:var(--blue);color:#fff;border:none;padding:11px 24px;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btnp:hover{background:var(--blue-dark)}
+.btnp:disabled{opacity:.6;cursor:not-allowed}
+.btns{background:#fff;border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:var(--rs);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btns:hover{background:var(--gray)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.25rem}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
+.statn{font-size:26px;font-weight:600}
+.statl{font-size:12px;color:var(--text2);margin-top:3px}
+.stat.danger .statn{color:var(--red)}
+.frow{display:flex;gap:10px;margin-bottom:1rem;align-items:center}
+.twrap{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.thead{display:grid;grid-template-columns:30px 1.8fr 1fr 1fr 50px 1.1fr 95px 40px;gap:8px;padding:10px 16px;background:var(--gray);font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.trow{display:grid;grid-template-columns:30px 1.8fr 1fr 1fr 50px 1.1fr 95px 40px;gap:8px;padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border);align-items:center}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:#fafbfc}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 9px;border-radius:100px}
+.bwait{background:var(--amber-light);color:var(--amber)}
+.bok{background:var(--green-light);color:var(--green)}
+.bclash{background:var(--red-light);color:var(--red)}
+.clashnames{font-size:11px;color:var(--red);margin-top:2px}
+.delbtn{background:none;border:none;color:var(--text3);cursor:pointer;padding:6px;border-radius:var(--rs)}
+.delbtn:hover{color:var(--red);background:var(--red-light)}
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px}
+.page{display:none}
+.page.active{display:block}
+.loader{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:var(--text2);line-height:1.5}
+.stepn{background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;flex-shrink:0;margin-top:1px}
+.urlbox{background:var(--gray);border:1px solid var(--border);border-radius:var(--rs);padding:12px 16px;font-family:monospace;font-size:12px;color:var(--text2);word-break:break-all;margin:1rem 0}
+@media(max-width:600px){.fg{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:999}
+.loginbox{background:#fff;border-radius:var(--r);padding:2rem;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.loginbox h2{font-size:16px;font-weight:600;margin-bottom:.25rem}
+.loginbox p{font-size:13px;color:var(--text2);margin-bottom:1.5rem}
+.loginerr{font-size:13px;color:var(--red);margin-top:8px;display:none}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:998}
+.modal-box{background:#fff;border-radius:var(--r);padding:1.5rem;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.modal-box h3{font-size:15px;font-weight:600;margin-bottom:1rem}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="header">
+  <div class="logo">KCETAŞ <span>İzin Talep Sistemi</span></div>
+  <div class="nav">
+    <button class="nbtn active" onclick="personelCikis()">Talep Oluştur</button>
+    <button class="nbtn" onclick="showPage('yonetici')">Yönetici</button>
+    <button class="nbtn" onclick="showPage('paylasim')">Paylaş</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div id="pg-personel" class="page active">
+    <div id="al-warn" class="alert alert-warn"></div>
+    <div id="al-ok" class="alert alert-ok"></div>
+    <div id="al-err" class="alert alert-err"></div>
+
+    <div class="card">
+      <div class="ctitle">Personel Bilgileri</div>
+      <div class="fg">
+        <div class="fl"><label>Ad Soyad *</label><input type="text" id="f-name" placeholder="Adınız soyadınız" oninput="checkClash()"></div>
+        <div class="fl"><label>Sicil No</label><input type="text" id="f-sicil" placeholder="Ör: 1042"></div>
+        <div class="fl"><label>Birim / Şeflik</label>
+          <select id="f-birim">
+            <option value="">-- Şefliğinizi seçin --</option>
+            <option>Arıza Şefliği</option>
+            <option>Şebeke Tesis Şefliği</option>
+            <option>Bakım Onarım Şefliği</option>
+            <option>İlçeler Şefliği</option>
+            <option>Aydınlatma Şefliği</option>
+            <option>Scada ve Yük Yönetim Şefliği</option>
+            <option>Teknik Kalite ve Veri Analiz Şefliği</option>
+          </select>
+        </div>
+        <div class="fl"><label>Unvan</label>
+          <select id="f-unvan">
+            <option value="">-- Unvanınızı seçin --</option>
+            <option>Arıza Memuru</option>
+            <option>Ekip Şefi</option>
+            <option>Yedek Ekip Şefi</option>
+            <option>Teknik Personel</option>
+            <option>Scada Operatörü</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctitle">İzin Tarihleri</div>
+      <div class="fg">
+        <div class="fl fg full">
+          <label>Tarih Aralığı *</label>
+          <div class="date-row">
+            <input type="date" id="f-start" style="flex:1" oninput="calcDays();checkClash()">
+            <span style="color:var(--text3)">—</span>
+            <input type="date" id="f-end" style="flex:1" oninput="calcDays();checkClash()">
+            <div class="daypill" id="daypill">0 gün</div>
+          </div>
+        </div>
+        <div class="fl fg full">
+          <label>Açıklama (isteğe bağlı)</label>
+          <textarea id="f-note" placeholder="Varsa ek bilgi..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btnp" id="savebtn" onclick="saveRequest()">Talebi Gönder</button>
+    </div>
+
+    <div id="taleplerim-section" style="margin-top:1.5rem;display:none">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div class="ctitle" style="margin:0">Taleplerim</div>
+          <button class="btns" style="font-size:12px;padding:5px 10px" onclick="personelCikis()">Çıkış Yap</button>
+        </div>
+        <div id="taleplerim-body"><div class="empty">Henüz talebiniz yok</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pg-yonetici" class="page">
+    <div class="stats">
+      <div class="stat"><div class="statn" id="s-total">0</div><div class="statl">Toplam Talep</div></div>
+      <div class="stat"><div class="statn" id="s-days">0</div><div class="statl">Toplam Gün</div></div>
+      <div class="stat danger"><div class="statn" id="s-clash">0</div><div class="statl">Çakışma</div></div>
+      <div class="stat"><div class="statn" id="s-people">0</div><div class="statl">Personel</div></div>
+    </div>
+    <div id="role-bar" style="background:var(--blue-light);color:var(--blue-dark);font-size:13px;padding:8px 12px;border-radius:var(--rs);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span id="role-label">Giriş yapıldı</span>
+      <div style="display:flex;gap:8px">
+        <button class="btns" id="admin-btn" onclick="openAdminPanel()" style="display:none;font-size:12px;padding:5px 10px">⚙ Yönetici Ekle</button>
+        <button class="btns" onclick="logout()" style="font-size:12px;padding:5px 10px">Çıkış</button>
+      </div>
+    </div>
+    <div class="frow">
+      <input type="text" id="f-search" placeholder="İsim veya birim ara..." oninput="renderList()" style="flex:1;max-width:260px">
+      <select id="f-filter" onchange="renderList()" style="width:150px">
+        <option value="">Tümü</option>
+        <option value="clash">Çakışanlar</option>
+        <option value="ok">Sorunsuz</option>
+      </select>
+      <div style="flex:1"></div>
+      <button class="btns" onclick="loadAll()">↻ Yenile</button>
+      <button class="btns" onclick="exportCSV()">↓ Excel</button>
+      <button class="btns" onclick="openCopKutusu()">🗑 Çöp Kutusu</button>
+    </div>
+    <div class="twrap">
+      <div class="thead">
+        <span><input type="checkbox" id="select-all-cb" onchange="toggleSelectAll(this)" title="Tümünü seç/kaldır"></span><span>Personel / Birim</span><span>Başlangıç</span><span>Bitiş</span><span>Gün</span><span>Talep Zamanı</span><span>Durum</span><span></span>
+      </div>
+      <div id="listbody"><div class="empty">Henüz talep yok</div></div>
+    </div>
+  </div>
+
+  <div id="pg-paylasim" class="page">
+    <div class="card">
+      <div class="ctitle">Personele Paylaş</div>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">Bu HTML dosyasını e-posta veya USB ile personellerinize gönderin. Herkes kendi bilgisayarından açar, doldurur. Talepler Yönetici sekmesinde görünür.</p>
+      <div style="text-align:center;margin-bottom:1rem">
+        <div style="display:inline-block;padding:16px;background:#fff;border:1px solid var(--border);border-radius:var(--r)" id="qr-wrap"></div>
+      </div>
+      <div class="urlbox" id="shareurl">—</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btns" onclick="copyUrl()">Adresi Kopyala</button>
+        <button class="btns" onclick="dlQR()">QR İndir</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">Nasıl Çalışır?</div>
+      <div class="steps">
+        <div class="step"><span class="stepn">1</span><span>Bu dosyayı personellerinize gönderin — e-posta, WhatsApp veya USB ile.</span></div>
+        <div class="step"><span class="stepn">2</span><span>Personel dosyayı açar, "Talep Oluştur" sekmesinden izin talebini doldurur ogönderir.</span></div>
+        <div class="step"><span class="stepn">3</span><span>Siz "Yönetici" sekmesinden tüm talepleri ve çakışmaları gerçek zamanlı görürsünüz.</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="personel-login" class="overlay" style="display:flex">
+  <div class="loginbox">
+    <h2>KCETAŞ İzin Sistemi</h2>
+    <p>Devam etmek için Sicil bilginizle giriş yapın.</p>
+    <div class="fl" style="margin-bottom:10px">
+      <label>Ad Soyad</label>
+      <input type="text" id="pl-user" placeholder="Adınız Soyadınız">
+    </div>
+    <div class="fl" style="margin-bottom:1.5rem">
+      <label>Sicil No / Şifre</label>
+      <input type="password" id="pl-pass" placeholder="Sicil numaranız veya yönetici şifresi" onkeydown="if(event.key==='Enter') personelGiris()">
+    </div>
+    <button class="btnp" onclick="personelGiris()" style="width:100%;justify-content:center">Giriş Yap</button>
+    <div id="pl-err" class="loginerr">Giriş bilgileri geçersiz!</div>
+  </div>
+</div>
+
+<div id="login-overlay" class="overlay" style="display:none">
+  <div class="loginbox">
+    <h2>Yönetici Girişi</h2>
+    <p>Lütfen yetkili şifrenizi girin.</p>
+    <div class="fl" style="margin-bottom:1.5rem">
+      <label>Şifre</label>
+      <input type="password" id="login-pass" onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btnp" onclick="doLogin()" style="flex:1;justify-content:center">Giriş</button>
+      <button class="btns" onclick="closeLogin()">İptal</button>
+    </div>
+    <div id="login-err" class="loginerr">Hatalı şifre girdiniz!</div>
+  </div>
+</div>
+
+<div id="admin-overlay" class="overlay" style="display:none">
+  <div class="loginbox" style="max-width:420px">
+    <h2>Yönetici Paneli</h2>
+    <p>Şeflikler için alt yönetici hesapları ekleyin.</p>
+    <div class="card" style="padding:1rem;margin-bottom:1rem;background:var(--gray)">
+      <div class="ctitle" style="margin-bottom:8px">Yeni Yönetici Ekle</div>
+      <div class="fl" style="margin-bottom:8px">
+        <select id="new-mgr-dept">
+          <option value="">-- Şeflik Seçin --</option>
+          <option>Arıza Şefliği</option>
+          <option>Şebeke Tesis Şefliği</option>
+          <option>Bakım Onarım Şefliği</option>
+          <option>İlçeler Şefliği</option>
+          <option>Aydınlatma Şefliği</option>
+          <option>Scada ve Yük Yönetim Şefliği</option>
+          <option>Teknik Kalite ve Veri Analiz Şefliği</option>
+        </select>
+      </div>
+      <div class="fl" style="margin-bottom:12px">
+        <input type="text" id="new-mgr-pass" placeholder="Bu şeflik için giriş şifresi">
+      </div>
+      <button class="btnp" onclick="addManager()" style="width:100%;justify-content:center;padding:8px">Ekle</button>
+      <div id="mgr-err" class="loginerr"></div>
+    </div>
+    <div class="ctitle" style="margin-bottom:6px">Mevcut Yöneticiler</div>
+    <div id="managers-list" style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:1.5rem"></div>
+    <button class="btns" onclick="document.getElementById('admin-overlay').style.display='none'" style="width:100%;justify-content:center">Kapat</button>
+  </div>
+</div>
+
+<div id="cop-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box" style="max-width:600px;max-height:80vh;overflow-y:auto">
+    <h3>Çöp Kutusu — Silinen Talepler</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem">Vardiya dönemi boyunca burada tutulur, istediğiniz zaman geri getirebilirsiniz.</p>
+    <div id="cop-body"><div class="empty">Çöp kutusu boş</div></div>
+    <div style="margin-top:1.5rem;text-align:right">
+      <button class="btns" onclick="document.getElementById('cop-modal').style.display='none'">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const URL_ = 'https://uzkuwgplwxfooosxqkul.supabase.co';
+const KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6a3V3Z3Bsd3hmb29vc3hxa3VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyOTI3NTMsImV4cCI6MjA5Njg2ODc1M30.wcX0CO60G1igl4kBcCOcIvBz_z0dt-aiFgWDYr8fN1c';
+const H    = {'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY};
+
+let rows = [];
+
+async function loadAll() {
+  try {
+    const r = await fetch(URL_+'/rest/v1/izin_talepleri?select=*&silindi=eq.false&order=baslangic.asc', {headers:H});
+    const txt = await r.text();
+    const all = txt ? JSON.parse(txt) : [];
+    rows = (currentRole==='admin') ? all : all.filter(x=>x.birim===currentRole);
+    renderList();
+  } catch(e) { console.error(e); }
+}
+
+function fmt(d){ if(!d) return '—'; const [y,m,g]=d.split('-'); return g+'.'+m+'.'+y; }
+
+function fmtTimestamp(ts) {
+  if(!ts) return '—';
+  try {
+    const d = new Date(ts);
+    if(isNaN(d.getTime())) return '—';
+    const gun = String(d.getDate()).padStart(2, '0');
+    const ay = String(d.getMonth() + 1).padStart(2, '0');
+    const yil = d.getFullYear();
+    const saat = String(d.getHours()).padStart(2, '0');
+    const dk = String(d.getMinutes()).padStart(2, '0');
+    return `${gun}.${ay}.${yil} ${saat}:${dk}`;
+  } catch(e) {
+    return '—';
+  }
+}
+
+function calcDays(){
+  const s=document.getElementById('f-start').value, e=document.getElementById('f-end').value;
+  const pill=document.getElementById('daypill');
+  if(!s||!e){pill.textContent='0 gün';return 0;}
+  const d=Math.round((new Date(e)-new Date(s))/86400000)+1;
+  pill.textContent=d>0?d+' gün':'!';
+  return d>0?d:0;
+}
+
+function overlap(s1,e1,s2,e2){return s1<=e2&&s2<=e1;}
+function clashOf(r){return rows.filter(x=>x.id!==r.id&&overlap(r.baslangic,r.bitis,x.baslangic,x.bitis)&&x.birim===r.birim&&x.unvan===r.unvan);}
+
+function showAl(t,msg){
+  ['warn','ok','err'].forEach(x=>{const el=document.getElementById('al-'+x);el.style.display='none';});
+  const el=document.getElementById('al-'+t);
+  el.innerHTML=msg; el.style.display='block';
+}
+
+function checkClash(){
+  const s=document.getElementById('f-start').value, e=document.getElementById('f-end').value;
+  ['warn','ok','err'].forEach(x=>document.getElementById('al-'+x).style.display='none');
+  if(!s||!e||s>e) return;
+  const birim=document.getElementById('f-birim').value;
+  const unvan=document.getElementById('f-unvan').value;
+  const c=rows.filter(r=>overlap(s,e,r.baslangic,r.bitis)&&(!birim||r.birim===birim)&&(!unvan||r.unvan===unvan));
+  if(c.length) showAl('warn','<strong>Çakışma uyarısı:</strong> '+c.map(r=>r.ad_soyad).join(', ')+' bu tarihler arasında izin talep etmiş.');
+  else showAl('ok','Bu tarihler müsait — çakışma yok.');
+}
+
+async function postIzin(payload){
+  const res = await fetch(URL_+'/rest/v1/izin_talepleri', {
+    method:'POST',
+    headers:{...H,'Prefer':'return=minimal'},
+    body:JSON.stringify(payload)
+  });
+  return res.status===201||res.status===200||res.status===204;
+}
+
+async function saveRequest(){
+  const name  = document.getElementById('f-name').value.trim();
+  const start = document.getElementById('f-start').value;
+  const end   = document.getElementById('f-end').value;
+  const birim = document.getElementById('f-birim').value;
+  const unvan = document.getElementById('f-unvan').value;
+  const sicil = document.getElementById('f-sicil').value.trim()||null;
+  const note  = document.getElementById('f-note').value.trim()||null;
+
+  if(!name||!start||!end){showAl('err','Ad soyad ve tarih alanları zorunludur.');return;}
+  if(!birim){showAl('err','Lütfen birim / şeflik seçin.');return;}
+  if(!unvan){showAl('err','Lütfen unvan seçin.');return;}
+  const days=calcDays();
+  if(!days){showAl('err','Tarih aralığı geçersiz.');return;}
+
+  const c=rows.filter(r=>overlap(start,end,r.baslangic,r.bitis)&&r.birim===birim&&r.unvan===unvan);
+  if(c.length&&!confirm('Çakışma var: '+c.map(r=>r.ad_soyad).join(', ')+' aynı dönemde izin talep etmiş.\nYine de göndermek istiyor musunuz?')) return;
+
+  const bugun = new Date();
+  const bugunGun = bugun.getDate();
+  const donemBaslangic = bugunGun >= 25
+    ? new Date(bugun.getFullYear(), bugun.getMonth(), 25)
+    : new Date(bugun.getFullYear(), bugun.getMonth()-1, 25);
+  const donemBitis = new Date(donemBaslangic.getFullYear(), donemBaslangic.getMonth()+1, 24);
+  
+  const startDate = new Date(start);
+  const ileriDonem = startDate > donemBitis;
+  
+  if(ileriDonem){
+    const donemAdi = donemBaslangic.toLocaleDateString('tr-TR',{day:'numeric',month:'long'}) + ' - ' + donemBitis.toLocaleDateString('tr-TR',{day:'numeric',month:'long'});
+    if(!confirm('⚠️ Dikkat! Bu talep mevcut vardiya dönemi dışında.\n\nMevcut dönem: ' + donemAdi + '\n\nTalebiniz ileri döneme ait. Yine de eklemek istiyor musunuz?')) return;
+  }
+
+  const btn=document.getElementById('savebtn');
+  btn.disabled=true; btn.innerHTML='<span class="loader"></span> Gönderiliyor...';
+
+  try {
+    const [sy,sm,sd] = start.split('-').map(Number);
+    const [ey,em,ed] = end.split('-').map(Number);
+    const startD = new Date(sy, sm-1, sd);
+    const endD   = new Date(ey, em-1, ed);
+
+    let donemSonu = new Date(sy, sm-1, 24);
+    if(startD > donemSonu) {
+      donemSonu = new Date(sy, sm, 24);
+    }
+
+    const base = {ad_soyad:name, sicil, birim, unvan};
+    const toStr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+
+    let kendiDonemBaslangic = new Date(sy, sm-1, 25);
+    if(startD.getDate() < 25){
+      kendiDonemBaslangic = new Date(sy, sm-2, 25);
+    }
+    const kendiDonemTarihi = toStr(kendiDonemBaslangic);
+
+    if(endD > donemSonu){
+      const gun1 = Math.round((donemSonu - startD)/86400000)+1;
+      await postIzin({...base, baslangic:start, bitis:toStr(donemSonu), gun_sayisi:gun1, aciklama:note, izin_devami:false, donem_tarihi:kendiDonemTarihi});
+
+      const donemBasD = new Date(donemSonu.getFullYear(), donemSonu.getMonth(), 25);
+      const gun2 = Math.round((endD - donemBasD)/86400000)+1;
+      const simdikiDonem = sy+'-'+String(sm).padStart(2,'0');
+      const devamDonemTarihi = toStr(donemBasD);
+      await postIzin({...base, baslangic:toStr(donemBasD), bitis:end, gun_sayisi:gun2, aciklama:'İzin Devamı', izin_devami:true, donem_id:simdikiDonem, donem_tarihi:devamDonemTarihi});
+
+      showAl('ok','✓ Talebiniz gönderildi! <strong>'+donemSonu.toLocaleDateString("tr-TR")+'</strong> sonrası yeni dönemde <strong>İzin Devamı</strong> olarak kaydedildi.');
+    } else {
+      await postIzin({...base, baslangic:start, bitis:end, gun_sayisi:days, aciklama:note, izin_devami:false, donem_tarihi:kendiDonemTarihi});
+      showAl('ok','✓ Talebiniz başarıyla gönderildi!');
+    }
+
+    await loadTaleplerim();
+    ['f-start','f-end','f-note'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('daypill').textContent='0 gün';
+    await loadAll();
+
+  } catch(e){
+    showAl('err','Hata: '+e.message);
+  } finally {
+    btn.disabled=false; btn.innerHTML='Talebi Gönder';
+  }
+}
+
+function updateRoleBar(){
+  const label = document.getElementById('role-label');
+  const adminBtn = document.getElementById('admin-btn');
+  if(currentRole==='admin'){
+    label.textContent='Admin girişi — Tüm şeflikler görünüyor';
+    adminBtn.style.display='inline-flex';
+  } else {
+    label.textContent='Giriş: '+currentRole;
+    adminBtn.style.display='none';
+  }
+}
+
+function logout(){
+  currentRole=null;
+  _showPage('personel');
+}
+
+function getEnYakinDonem(){
+  const donemler = rows.filter(r=>r.donem_tarihi).map(r=>r.donem_tarihi);
+  if(!donemler.length) return null;
+  return donemler.sort()[0];
+}
+
+let seciliIdSet = new Set();
+
+function renderList(){
+  const search=(document.getElementById('f-search').value||'').toLowerCase();
+  const filter=document.getElementById('f-filter').value;
+  let list=[...rows];
+  if(search) list=list.filter(r=>(r.ad_soyad+r.birim+r.unvan+r.sicil).toLowerCase().includes(search));
+  const hasClash=r=>clashOf(r).length>0;
+  if(filter==='clash') list=list.filter(hasClash);
+  if(filter==='ok') list=list.filter(r=>!hasClash(r));
+
+  document.getElementById('s-total').textContent=rows.length;
+  document.getElementById('s-days').textContent=rows.reduce((a,r)=>a+(r.gun_sayisi||0),0);
+  document.getElementById('s-clash').textContent=rows.filter(hasClash).length;
+  document.getElementById('s-people').textContent=new Set(rows.map(r=>r.ad_soyad)).size;
+
+  const body=document.getElementById('listbody');
+  if(!list.length){body.innerHTML='<div class="empty">Talep bulunamadı</div>';return;}
+
+  if(seciliIdSet.size === 0){
+    const enYakin = getEnYakinDonem();
+    if(enYakin){
+      rows.forEach(r=>{ if(r.donem_tarihi === enYakin) seciliIdSet.add(r.id); });
+    }
+  }
+
+  body.innerHTML=list.map(r=>{
+    const c=clashOf(r);
+    const badge=c.length
+      ? `<span class="badge bclash">⚠ Çakışma</span><div class="clashnames">${c.map(x=>x.ad_soyad).join(', ')} ile</div>`
+      : `<span class="badge bok">✓ Sorunsuz</span>`;
+    const devamiBadge = r.izin_devami ? '<span class="badge" style="background:#E6F1FB;color:#185FA5;margin-left:5px">↩ Devam</span>' : '';
+    const checked = seciliIdSet.has(r.id) ? 'checked' : '';
+    return `<div class="trow">
+      <div><input type="checkbox" class="row-cb" data-id="${r.id}" ${checked} onchange="toggleRowSelect(${r.id}, this.checked)"></div>
+      <div><strong style="font-size:13px">${r.ad_soyad}</strong>${devamiBadge}<div style="font-size:12px;color:var(--text2)">${r.birim||r.unvan||'—'}</div></div>
+      <div>${fmt(r.baslangic)}</div>
+      <div>${fmt(r.bitis)}</div>
+      <div><span class="badge bwait">${r.gun_sayisi}g</span></div>
+      <div style="color:var(--text2);font-size:12px">${fmtTimestamp(r.created_at)}</div>
+      <div>${badge}</div>
+      <div><button class="delbtn" onclick="delRow(${r.id})">✕</button></div>
+    </div>`;
+  }).join('');
+
+  updateSelectAllState();
+}
+
+function toggleRowSelect(id, checked){
+  if(checked) seciliIdSet.add(id);
+  else seciliIdSet.delete(id);
+  updateSelectAllState();
+}
+
+function toggleSelectAll(cb){
+  document.querySelectorAll('.row-cb').forEach(el=>{
+    const id = Number(el.getAttribute('data-id'));
+    el.checked = cb.checked;
+    if(cb.checked) seciliIdSet.add(id);
+    else seciliIdSet.delete(id);
+  });
+}
+
+function updateSelectAllState(){
+  const all = document.querySelectorAll('.row-cb');
+  const allCb = document.getElementById('select-all-cb');
+  if(!allCb || !all.length) return;
+  const checkedCount = [...all].filter(el=>el.checked).length;
+  allCb.checked = checkedCount === all.length;
+  allCb.indeterminate = checkedCount > 0 && checkedCount < all.length;
+}
+
+async function delRow(id){
+  if(!confirm('Bu talebi silmek istediğinizden emin misiniz?')) return;
+  await fetch(URL_+'/rest/v1/izin_talepleri?id=eq.'+id,{method:'PATCH',headers:{...H,'Prefer':'return=minimal'},body:JSON.stringify({silindi:true, silinme_tarihi:new Date().toISOString()})});
+  seciliIdSet.delete(id);
+  await loadAll();
+}
+
+async function exportCSV(){
+  if(!rows.length){alert('Veri yok.');return;}
+
+  const excelKayitlari = rows.filter(x => seciliIdSet.has(x.id));
+  const kalacaklar = rows.filter(x => !seciliIdSet.has(x.id));
+
+  if(!excelKayitlari.length){
+    alert('Hiçbir kayıt seçilmedi. Lütfen Excel\'e aktarılacak talepleri işaretleyin.');
+    return;
+  }
+
+  const sil = confirm(excelKayitlari.length+' seçili talep Excel olarak indirilecek.\n'+kalacaklar.length+' talep panelde kalacak.\n\n"Tamam" basarsanız Excele giren kayıtlar listeden de silinecek (çöp kutusuna taşınır).\n"İptal" basarsanız sadece indirilir, silinmez.');
+
+  const sorted = [...excelKayitlari].sort((a,b)=>a.baslangic>b.baslangic?1:-1);
+
+  const data = [['Sicil No','Ad Soyad','Başlangıç Tarihi','Bitiş Tarihi','Gün Sayısı','Talep Zamanı','Açıklama','Ünvan','Çakışma']];
+  sorted.forEach(x=>{
+    const c=clashOf(x);
+    data.push([
+      x.sicil||'',
+      x.ad_soyad,
+      fmt(x.baslangic),
+      fmt(x.bitis),
+      x.gun_sayisi,
+      fmtTimestamp(x.created_at),
+      x.aciklama||'',
+      x.unvan||'',
+      c.length ? c.map(y=>y.ad_soyad).join(', ') : ''
+    ]);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  ws['!cols'] = [
+    {wch:12},{wch:22},{wch:16},{wch:16},
+    {wch:10},{wch:18},{wch:25},{wch:15},{wch:30}
+  ];
+
+  const headerStyle = {font:{bold:true},fill:{fgColor:{rgb:'185FA5'}},alignment:{horizontal:'center'}};
+  ['A1','B1','C1','D1','E1','F1','G1','H1','I1'].forEach(cell=>{
+    if(ws[cell]) ws[cell].s = headerStyle;
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'İzin Talepleri');
+  XLSX.writeFile(wb, 'KCETAS_Izin_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  
+  if(sil){
+    const simdi = new Date().toISOString();
+
+    for(const x of excelKayitlari){
+      await fetch(URL_+'/rest/v1/izin_talepleri?id=eq.'+x.id,{method:'PATCH',headers:{...H,'Prefer':'return=minimal'},body:JSON.stringify({silindi:true, silinme_tarihi:simdi})});
+    }
+
+    seciliIdSet.clear();
+    await loadAll();
+  }
+}
+
+const ADMIN_PASS = 'kcetas2025admin';
+let currentRole = null;
+
+const SHARE_URL = 'https://tinyurl.com/kcetas-izin';
+const EJS_SERVICE  = 'service_il6szcc';
+const EJS_TEMPLATE = 'template_h8fcdhy';
+const EJS_KEY      = '3zmTcY9q7joO_mjFr';
+emailjs.init(EJS_KEY);
+
+function showPage(p){
+  if(p==='yonetici'){
+    openLogin();
+    return;
+  }
+  _showPage(p);
+}
+
+function _showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('pg-'+p).classList.add('active');
+  document.querySelectorAll('.nbtn').forEach((b,i)=>b.classList.toggle('active',['personel','yonetici','paylasim'][i]===p));
+  if(p==='yonetici'){ updateRoleBar(); loadAll(); }
+  if(p==='paylasim'){
+    const CURRENT_SHARE_URL = 'https://ugrcglr.github.io/Kcetas-izin/kcetas_izin.html';
+    document.getElementById('shareurl').textContent = CURRENT_SHARE_URL;
+  }
+}
+
+function openLogin(){
+  document.getElementById('login-overlay').style.display='flex';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').style.display='none';
+  setTimeout(()=>document.getElementById('login-pass').focus(),100);
+}
+
+function closeLogin(){
+  document.getElementById('login-overlay').style.display='none';
+}
+
+async function getManagers(){
+  try{
+    const r = await fetch(URL_+'/rest/v1/yoneticiler?select=*', {headers:H});
+    const txt = await r.text();
+    return txt ? JSON.parse(txt) : [];
+  }catch(e){ return []; }
+}
+
+async function doLogin(){
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-err');
+  
+  if(pass === ADMIN_PASS){
+    currentRole = 'admin';
+    closeLogin();
+    _showPage('yonetici');
+    return;
+  }
+  
+  const managers = await getManagers();
+  const mgr = managers.find(m=>m.sifre===pass);
+  if(mgr){
+    currentRole = mgr.seflik;
+    closeLogin();
+    _showPage('yonetici');
+    return;
+  }
+  
+  err.style.display='block';
+}
+
+async function addManager(){
+  const dept = document.getElementById('new-mgr-dept').value;
+  const pass = document.getElementById('new-mgr-pass').value;
+  const err = document.getElementById('mgr-err');
+  if(!dept||!pass){ err.textContent='Şeflik ve şifre zorunludur.'; err.style.display='block'; return; }
+  
+  try{
+    const res = await fetch(URL_+'/rest/v1/yoneticiler', {
+      method:'POST',
+      headers:{...H,'Prefer':'return=minimal'},
+      body:JSON.stringify({seflik:dept, sifre:pass})
+    });
+    if(!res.ok){ const t=await res.text(); throw new Error(t); }
+    err.style.display='none';
+    document.getElementById('new-mgr-dept').value='';
+    document.getElementById('new-mgr-pass').value='';
+    renderManagersList();
+  }catch(e){
+    err.textContent='Hata: '+e.message; err.style.display='block';
+  }
+}
+
+async function renderManagersList(){
+  const managers = await getManagers();
+  const list = document.getElementById('managers-list');
+  if(!managers.length){ list.innerHTML='<div style="font-size:13px;color:var(--text3)">Henüz yönetici eklenmemiş.</div>'; return; }
+  list.innerHTML = managers.map(m=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--gray);padding:8px 12px;border-radius:var(--rs);font-size:13px">
+      <span>${m.seflik}</span>
+      <button class="delbtn" onclick="removeManager(${m.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+async function removeManager(id){
+  if(!confirm('Bu yöneticiyi silmek istediğinizden emin misiniz?')) return;
+  await fetch(URL_+'/rest/v1/yoneticiler?id=eq.'+id,{method:'DELETE',headers:H});
+  renderManagersList();
+}
+
+function openAdminPanel(){
+  renderManagersList();
+  document.getElementById('admin-overlay').style.display='flex';
+}
+
+function buildQR(){
+  const wrap = document.getElementById('qr-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = '<canvas id="qr-canvas"></canvas>';
+  const qr = new QRious({
+    element: document.getElementById('qr-canvas'),
+    value: SHARE_URL,
+    size: 180,
+    foreground: '#185FA5',
+    background: '#ffffff'
+  });
+}
+
+function dlQR(){
+  const canvas = document.getElementById('qr-canvas');
+  if(!canvas){alert('Önce Paylaş sekmesini açın.');return;}
+  const a=document.createElement('a');
+  a.download='kcetas_izin_qr.png';
+  a.href=canvas.toDataURL();
+  a.click();
+}
+
+function copyUrl(){
+  const CURRENT_SHARE_URL = 'https://ugrcglr.github.io/Kcetas-izin/kcetas_izin.html';
+  navigator.clipboard.writeText(CURRENT_SHARE_URL)
+    .then(()=>alert('Adres kopyalandı!'))
+    .catch(()=>alert('Manuel kopyalayın:\n'+CURRENT_SHARE_URL));
+}
+
+async function openCopKutusu(){
+  document.getElementById('cop-modal').style.display='flex';
+  await loadCopKutusu();
+}
+
+async function loadCopKutusu(){
+  try {
+    const r = await fetch(URL_+'/rest/v1/izin_talepleri?select=*&silindi=eq.true&order=silinme_tarihi.desc', {headers:H});
+    const txt = await r.text();
+    let list = txt ? JSON.parse(txt) : [];
+    
+    if(currentRole !== 'admin') {
+      list = list.filter(x => x.birim === currentRole);
+    }
+    
+    const body = document.getElementById('cop-body');
+    if(!list.length){ body.innerHTML='<div class="empty">Çöp kutusu boş</div>'; return; }
+    
+    body.innerHTML = list.map(r => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border);font-size:13px">
+        <div>
+          <strong>${r.ad_soyad}</strong> (${r.birim})<br>
+          <span style="font-size:11px;color:var(--text2)">${fmt(r.baslangic)} — ${fmt(r.bitis)} (${r.gun_sayisi} Gün)</span>
+        </div>
+        <button class="btns" style="padding:4px 8px;font-size:12px" onclick="geriGetir(${r.id})">↩ Geri Al</button>
+      </div>
+    `).join('');
+  } catch(e) { console.error(e); }
+}
+
+async function geriGetir(id){
+  await fetch(URL_+'/rest/v1/izin_talepleri?id=eq.'+id, {
+    method:'PATCH',
+    headers:{...H,'Prefer':'return=minimal'},
+    body:JSON.stringify({silindi:false, silinme_tarihi:null})
+  });
+  await loadCopKutusu();
+  await loadAll();
+}
+
+loadAll();
+
+let currentPersonel = null;
+
+async function personelGiris(){
+  const user = document.getElementById('pl-user').value.trim();
+  const pass = document.getElementById('pl-pass').value.trim();
+  const err = document.getElementById('pl-err');
+  err.style.display = 'none';
+
+  if(user.toLowerCase().trim() === 'admin' && pass.trim() === ADMIN_PASS){
+    currentRole = 'admin';
+    document.getElementById('personel-login').style.display = 'none';
+    _showPage('yonetici');
+    return;
+  }
+
+  const managers = await getManagers();
+  const mgr = managers.find(m => m.sifre === pass.trim());
+  if(mgr){
+    currentRole = mgr.seflik;
+    document.getElementById('personel-login').style.display = 'none';
+    _showPage('yonetici');
+    return;
+  }
+
+  if(user.length < 3 || pass.length < 4){
+    err.style.display = 'block';
+    return;
+  }
+
+  currentPersonel = { adSoyad: user, sicil: pass };
+
+  document.getElementById('f-name').value = user;
+  document.getElementById('f-name').readOnly = true;
+  document.getElementById('f-name').style.background = '#f5f6f8';
+  document.getElementById('f-sicil').value = pass;
+  document.getElementById('f-sicil').readOnly = true;
+  document.getElementById('f-sicil').style.background = '#f5f6f8';
+  document.getElementById('personel-login').style.display = 'none';
+  loadTaleplerim();
+}
+
+function personelCikis(){
+  currentPersonel = null;
+  showPage('personel');
+  const overlay = document.getElementById('personel-login');
+  if(overlay) overlay.style.display = 'flex';
+  const u = document.getElementById('pl-user');
+  if(u) u.value = '';
+  const p = document.getElementById('pl-pass');
+  if(p) p.value = '';
+  const t = document.getElementById('taleplerim-section');
+  if(t) t.style.display = 'none';
+
+  ['f-name','f-sicil','f-birim','f-unvan','f-start','f-end','f-note'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.value = '';
+      el.readOnly = false;
+      el.style.background = '';
+    }
+  });
+  const dp = document.getElementById('daypill');
+  if(dp) dp.textContent = '0 gün';
+  ['warn','ok','err'].forEach(t=>{const e=document.getElementById('al-'+t); if(e) e.style.display='none';});
+}
+
+async function loadTaleplerim(){
+  if(!currentPersonel) return;
+  const sicil = currentPersonel.sicil;
+  try {
+    const r = await fetch(URL_+'/rest/v1/izin_talepleri?sicil=eq.'+encodeURIComponent(sicil)+'&silindi=eq.false&order=baslangic.asc', {headers:H});
+    const txt = await r.text();
+    const talepler = txt ? JSON.parse(txt) : [];
+    const section = document.getElementById('taleplerim-section');
+    const body = document.getElementById('taleplerim-body');
+    
+    if(!talepler.length){
+      section.style.display='none';
+      return;
+    }
+    section.style.display='block';
+    body.innerHTML = talepler.map(t => {
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px">
+        <div>
+          <span style="font-weight:600">${fmt(t.baslangic)} — ${fmt(t.bitis)}</span> 
+          <span style="color:var(--text2);margin-left:6px">(${t.gun_sayisi} gün)</span>
+          ${t.izin_devami ? '<span class="badge" style="background:#E6F1FB;color:#185FA5;font-size:10px;padding:1px 6px;margin-left:4px">Devam Kaydı</span>':''}
+        </div>
+        <button class="delbtn" onclick="delRow(${t.id}).then(loadTaleplerim)" style="padding:4px">✕</button>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+</script>
+</body>
+</html>
